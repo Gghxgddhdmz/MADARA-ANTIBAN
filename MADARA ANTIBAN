@@ -1,110 +1,158 @@
--- حماية متقدمة ضد الباند - 99%
-if game.CoreGui:FindFirstChild("AdvancedProtectionGUI") then
-	game.CoreGui:FindFirstChild("AdvancedProtectionGUI"):Destroy()
+-- 📢 شاشة البداية: جارٍ تشغيل طرق روبيرتو
+local player = game:GetService("Players").LocalPlayer
+
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "StartupMessage"
+
+local label = Instance.new("TextLabel", gui)
+label.Size = UDim2.new(0.4, 0, 0.1, 0)
+label.Position = UDim2.new(0.3, 0, 0.4, 0)
+label.Text = "جارٍ تشغيل طرق روبيرتو..."
+label.TextColor3 = Color3.new(1, 0, 0)
+label.BackgroundColor3 = Color3.new(0, 0, 0)
+label.BackgroundTransparency = 0.3
+label.TextScaled = true
+label.Font = Enum.Font.SourceSansBold
+label.ZIndex = 100
+
+task.delay(5, function()
+	gui:Destroy()
+end)
+
+-- 🔧 سكربت شامل: حماية + AntiAFK + Xray + حذف الأنيميشنات + تقليل حرارة + إزالة قوام + تعطيل مياه
+
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local VirtualUser = game:GetService("VirtualUser")
+local Terrain = workspace:FindFirstChildOfClass("Terrain")
+
+-- 📉 تقليل الإضاءة والجرافيكس
+Lighting.GlobalShadows = false
+Lighting.Brightness = 1
+Lighting.FogEnd = 100000
+Lighting.EnvironmentDiffuseScale = 0
+Lighting.EnvironmentSpecularScale = 0
+Lighting.OutdoorAmbient = Color3.fromRGB(0, 0, 0)
+
+-- 🌊 تعطيل فيزياء المياه الثقيلة
+if Terrain then
+	Terrain.WaterWaveSize = 0
+	Terrain.WaterWaveSpeed = 0
+	Terrain.WaterReflectance = 0
+	Terrain.WaterTransparency = 1
 end
 
-local sg = Instance.new("ScreenGui", game.CoreGui)
-sg.Name = "AdvancedProtectionGUI"
-sg.ResetOnSpawn = false
+-- 🧼 حذف المؤثرات الثقيلة
+for _, obj in pairs(workspace:GetDescendants()) do
+	if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Fire") or obj:IsA("Smoke") then
+		obj.Enabled = false
+	end
+end
 
-local f = Instance.new("Frame", sg)
-f.Size = UDim2.new(0, 300, 0, 160)
-f.Position = UDim2.new(0.35, 0, 0.35, 0)
-f.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-f.Active = true
-f.Draggable = true
-Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
-
-local x = Instance.new("TextButton", f)
-x.Size = UDim2.new(0, 30, 0, 30)
-x.Position = UDim2.new(1, -35, 0, 5)
-x.Text = "X"
-x.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
-x.TextColor3 = Color3.fromRGB(255, 255, 255)
-x.Font = Enum.Font.SourceSansBold
-x.TextSize = 18
-Instance.new("UICorner", x)
-
-local btn = Instance.new("TextButton", f)
-btn.Size = UDim2.new(0, 220, 0, 50)
-btn.Position = UDim2.new(0.5, -110, 0.5, -10)
-btn.Text = "تفعيل الحماية المتقدمة"
-btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.Font = Enum.Font.SourceSansBold
-btn.TextSize = 16
-Instance.new("UICorner", btn)
-
-local restore = Instance.new("TextButton", sg)
-restore.Size = UDim2.new(0, 130, 0, 30)
-restore.Position = UDim2.new(1, -140, 1, -40)
-restore.Text = "استرجاع الحماية"
-restore.Visible = false
-restore.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-restore.TextColor3 = Color3.fromRGB(255, 255, 255)
-restore.Font = Enum.Font.SourceSans
-restore.TextSize = 16
-Instance.new("UICorner", restore)
-
-x.MouseButton1Click:Connect(function()
-	f.Visible = false
-	restore.Visible = true
-end)
-
-restore.MouseButton1Click:Connect(function()
-	f.Visible = true
-	restore.Visible = false
-end)
-
-btn.MouseButton1Click:Connect(function()
-	btn.Text = "جاري تفعيل الحماية..."
-	pcall(function()
-		local plr = game:GetService("Players").LocalPlayer
-		local char = plr.Character or plr.CharacterAdded:Wait()
-
-		-- إخفاء الاسم
-		local h = char:FindFirstChild("Humanoid")
-		if h then h.NameDisplayDistance = 0 end
-
-		-- تعطيل الطرد بسبب عدم الحركة
-		for _, v in pairs(getconnections(plr.Idled)) do
-			v:Disable()
-		end
-
-		-- تعطيل kick / Ban / Shutdown
-		for _, v in pairs(getgc(true)) do
-			if typeof(v) == "function" and islclosure(v) then
-				local info = debug.getinfo(v)
-				if info.name == "kick" or info.name == "Ban" or info.name == "Shutdown" then
-					hookfunction(v, function() return end)
-				end
-			end
-		end
-
-		-- تعطيل الريموتات المشبوهة
-		for _, obj in pairs(game:GetDescendants()) do
-			if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-				local name = obj.Name:lower()
-				if name:find("ban") or name:find("report") or name:find("cheat") then
-					obj:Destroy()
-				end
-			end
-		end
-
-		-- منع destroy لـ LocalPlayer أو CoreGui
-		local mt = getrawmetatable(game)
-		setreadonly(mt, false)
-		local old = mt.__namecall
-
-		mt.__namecall = newcclosure(function(self, ...)
-			local method = getnamecallmethod()
-			if (method == "Kick" or method == "Destroy") and (self == plr or tostring(self):lower():find("coregui")) then
-				return nil
-			end
-			return old(self, ...)
+-- 👁️ Xray (جعل الجدران شبه شفافة)
+for _, part in pairs(workspace:GetDescendants()) do
+	if part:IsA("BasePart") and part.Transparency < 0.95 then
+		pcall(function()
+			part.LocalTransparencyModifier = 0.7
 		end)
-	end)
+	end
+end
 
-	btn.Text = "تم تفعيل الحماية المتقدمة!"
-	btn.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+-- ⚙️ تحديد FPS (اختياري)
+pcall(function()
+	setfpscap(30)
 end)
+
+-- 💤 Anti-AFK
+player.Idled:Connect(function()
+	VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+	task.wait(1)
+	VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+end)
+
+-- 🖥️ شاشة إعلام تعرض حالة AFK
+local ScreenGui = Instance.new("ScreenGui", player.PlayerGui)
+local InfoLabel = Instance.new("TextLabel", ScreenGui)
+
+InfoLabel.Size = UDim2.new(0, 200, 0, 50)
+InfoLabel.Position = UDim2.new(0.5, -100, 0, 10)
+InfoLabel.Text = "ROBERtoxCatay - AFK System Active"
+InfoLabel.TextColor3 = Color3.new(1, 1, 1)
+InfoLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+
+-- 🔴 إذا كانت الصحة 100 اقتله
+if player.Character and player.Character:FindFirstChild("Humanoid") then
+	local humanoid = player.Character.Humanoid
+	if humanoid.Health == 100 then
+		humanoid.Health = 0
+	else
+		print("اقوى طرق")
+	end
+end
+
+-- 🔄 حذف الأنيميشنات من جميع اللاعبين
+for _, v in pairs(Players:GetPlayers()) do
+	if v.Character then
+		for _, anim in pairs(v.Character:GetDescendants()) do
+			if anim:IsA("Animation") then
+				anim:Destroy()
+			end
+		end
+	end
+end
+
+-- 🖼️ إزالة القوام (Decal و Texture)
+for _, v in pairs(workspace:GetDescendants()) do
+	if v:IsA("Decal") or v:IsA("Texture") then
+		v:Destroy()
+	end
+end
+
+-- 🛡️ حماية من الطرد والباند والريموتات المشبوهة
+spawn(function()
+	local char = player.Character or player.CharacterAdded:Wait()
+
+	-- إخفاء الاسم
+	local h = char:FindFirstChild("Humanoid")
+	if h then h.NameDisplayDistance = 0 end
+
+	-- تعطيل الطرد بسبب عدم الحركة
+	for _, v in pairs(getconnections(player.Idled)) do
+		v:Disable()
+	end
+
+	-- تعطيل kick / Ban / Shutdown
+	for _, v in pairs(getgc(true)) do
+		if typeof(v) == "function" and islclosure(v) then
+			local info = debug.getinfo(v)
+			if info.name == "kick" or info.name == "Ban" or info.name == "Shutdown" then
+				hookfunction(v, function() return end)
+			end
+		end
+	end
+
+	-- تعطيل الريموتات المشبوهة
+	for _, obj in pairs(game:GetDescendants()) do
+		if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+			local name = obj.Name:lower()
+			if name:find("ban") or name:find("report") or name:find("cheat") then
+				obj:Destroy()
+			end
+		end
+	end
+
+	-- منع destroy أو kick للـ LocalPlayer أو CoreGui
+	local mt = getrawmetatable(game)
+	setreadonly(mt, false)
+	local old = mt.__namecall
+
+	mt.__namecall = newcclosure(function(self, ...)
+		local method = getnamecallmethod()
+		if (method == "Kick" or method == "Destroy") and (self == player or tostring(self):lower():find("coregui")) then
+			return nil
+		end
+		return old(self, ...)
+	end)
+end)
+
+print("✅ تم تفعيل النظام الكامل: حماية + تحسين أداء + منع طرد + Xray + إزالة قوام + حذف أنيميشنات + إخفاء الاسم")
